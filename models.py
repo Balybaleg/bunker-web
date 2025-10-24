@@ -1,16 +1,17 @@
 from pydantic import BaseModel
-from typing import Optional, List, Literal
+from typing import List
+import uuid
 
 
 class POSTResponse(BaseModel):
     username: str
 
 class Room(BaseModel):
-    room_id: str = None
+    room_id: str | None = None
     name: str | None = None
-    room_admin: str | None = None
     users: List[str]  = []
-    cards: dict | None = None  # Словарь с карточками, ключ - ID карточки, значение - объект Card
+    cards: dict | None = None
+    game_id: str | None = None
     is_game_started: bool = False
 
 class CardParam(BaseModel):
@@ -28,16 +29,23 @@ class CardDetail(BaseModel):
 
 class Card(BaseModel):
     card_id: str
-    card_owner: str | None = None  # ID пользователя, которому принадлежит карточка
+    card_owner: str | None = None
     card: CardDetail
 
 class User(BaseModel):
-    user_id: str = None
+    user_id: str | None = None
     username: str
     room_id: str | None = None
     is_ready: bool = False
     is_admin: bool = False
     alive: bool = True
     is_my_turn: bool = False
-    card_id: str | None = None  # ID карточки
+    card_id: str | None = None
     websocket_id: str | None = None
+
+class Game(BaseModel):
+    game_id: str = str(uuid.uuid4())
+    room_id: str
+    state: str = "waiting"
+    game_admin: User
+    players: List[User]

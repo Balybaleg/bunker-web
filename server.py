@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
-from routers import rooms_router, users_router
+from routers import rooms_router, users_router, ws_router
 # from logics.eventBus_service import EventBus
 # from logics.users_service import UserService
 # from logics.rooms_service import RoomService
@@ -27,9 +28,5 @@ app.add_middleware(
 app.include_router(rooms_router.router)
 app.include_router(users_router.router)
 # app.include_router(cards_router.router)
-# app.include_router(ws_router.router)
-
-
-
-
-# ws_service = WsService(event_bus)
+app.include_router(ws_router.router)
+app.mount("/static", StaticFiles(directory="static"), name="static")

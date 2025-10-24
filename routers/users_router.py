@@ -19,8 +19,11 @@ async def get_user(user_id: str):
 
 @router.post("")
 async def create_user(user: User):
-    user : User = await users_service.create_user(user)
-    return user.model_dump_json()
+    created_user: User | None = await users_service.create_user(user)
+    if not created_user:
+        return 
+    return created_user.model_dump_json()
+    
 
 
 @router.delete("/{user_id}")

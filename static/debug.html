@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>WS Debug Page</title>
+  <style>
+    body { font-family: monospace; background: #f4f4f4; padding: 20px; }
+    input, button, textarea { margin: 5px; padding: 5px; }
+    #log { background: #222; color: #0f0; padding: 10px; height: 200px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <h2>WebSocket Debug</h2>
+  <div>
+    <label>Room ID: <input id="roomId" value="testroom"></label><br>
+    <label>User ID: <input id="userId" value="u1"></label><br>
+    <label>Username: <input id="username" value="Alice"></label><br>
+    <button onclick="connectWS()">Connect</button>
+    <button onclick="disconnectWS()">Disconnect</button>
+  </div>
+  <div>
+    <textarea id="wsMessage" rows="3" cols="40" placeholder="Сообщение..."></textarea><br>
+    <button onclick="sendWS()">Send</button>
+  </div>
+  <div id="log"></div>
+
+  <h2>REST Debug</h2>
+  <div>
+    <h3>GET</h3>
+    <button onclick="getData('/rooms')">GET /rooms</button>
+    <button onclick="getData('/users')">GET /users</button>
+    <pre id="getResult"></pre>
+  </div>
+  <div>
+    <h3>POST</h3>
+    <select id="postEndpoint">
+      <option value="/rooms">/rooms</option>
+      <option value="/users">/users</option>
+    </select><br>
+    <textarea id="postBody" rows="4" cols="40" placeholder='{"key":"value"}'></textarea><br>
+    <button onclick="postData()">Send POST</button>
+    <pre id="postResult"></pre>
+  </div>
+
+  <script>
+    let ws;
+
+    function log(msg) {
+      const logDiv = document.getElementById("log");
+      logDiv.innerHTML += msg + "<br>";
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function connectWS() {
+      const roomId = document.getElementById("roomId").value;
+      const userId = document.getElementById("userId").value;
+      const username = document.getElementById("username").value;
+
+      const wsUrl = `ws://${location.host}/ws/${roomId}/${userId}/${username}`;
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => log("✅ Connected");
+      ws.onmessage = (event) => log("📩 " + event.data);
+      ws.onclose = () => log("❌ Disconnected");
+      ws.onerror = (err) => log("⚠️ Error: " + err);
+    }
+
+    function disconnectWS() {
+      if (ws) ws.close();
+    }
+
+    function sendWS() {
+      const msg = document.getElementById("wsMessage").value;
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(msg);
+        log("➡️ " + msg);
+      } else {
+        log("⚠️ WebSocket не подключен");
+      }
+    }
+
+    async function getData(endpoint) {
+      const res = await fetch(endpoint);
+      document.getElementById("getResult").textContent = await res.text();
+    }
+
+    async function postData() {
+      const endpoint = document.getElementById("postEndpoint").value;
+      const body = document.getElementById("postBody").value;
+      try {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body
+        });
+        document.getElementById("postResult").textContent = await res.text();
+      } catch (e) {
+        document.getElementById("postResult").textContent = "Ошибка: " + e;
+      }
+    }
+  </script>
+</body>
+</html>
